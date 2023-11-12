@@ -9,6 +9,7 @@ void parser(int argc, char **argv, opt *struct_flags, char *pattern);
 void files(int argc, char **argv, opt *struct_flags, Counters *counters, char *pattern);
 void if_match(opt *struct_flags, Counters* counters);
 void output_filename(opt *struct_flags, char *file_name, Counters *counters);
+void flag_o(opt *struct_flags, Counters *counters, char *begin_str, regmatch_t *pmatch, char *file_name);
 
 int main(int argc, char **argv) {
 	char pattern[1024] = {0};
@@ -22,10 +23,16 @@ int main(int argc, char **argv) {
 
 void parser(int argc, char **argv, opt *struct_flags, char *pattern) {
 	int flag;
-	while((flag = getopt_long(argc, argv, "n", 0, 0)) != -1) {
+	while((flag = getopt_long(argc, argv, "nco", 0, 0)) != -1) {
 		switch(flag) {
 			case 'n':
 				struct_flags->n = 1;
+				break;
+			case 'c':
+				struct_flags->c = 1;
+				break;
+			case 'o':
+				struct_flags->o = 1;
 				break;
 			default:
 				fprintf(stderr, "Parser file(delete): invalid option\n");
@@ -89,20 +96,23 @@ void flags(regex_t patt_compiled, opt *struct_flags, Counters *counters, FILE *f
 			if(counters->file_count > 1) {
 				output_filename(struct_flags, file_name, counters);
 			}
+			if(struct_flags->o) {
+				flag_o(struct_flags, counters, begin_str, pmatch, file_name);
+			}
 
 			counters->match = 1;
 			begin_str += pmatch[0].rm_eo;
-
 		}
-			
-		if(counters->match) {
-			if_match(struct_flags, counters);
+		if(!struct_flags->o) {
+			if(counters->match) {
+				if_match(struct_flags, counters);
+			}
 		}
 	}
 }
 
 void output_filename(opt *struct_flags, char *file_name, Counters* counters) {
-			if(counters->match == 0 && !struct_flags->h && !struct_flags->l && !struct_flags->c && struct_flags->o) {
+			if(counters->match == 0 && !struct_flags->h && !struct_flags->l && !struct_flags->c && !struct_flags->o) {
 				printf("%s:", file_name);
 			}
 }
@@ -119,6 +129,21 @@ void if_match(opt *struct_flags, Counters* counters) {
 		printf("%s", counters->str);
 	}
 	counters->line += counters->match; //В оригинале += !!match
+}
+
+void flag_o(opt *struct_flags, Counters *counters, char *begin_str, regmatch_t *pmatch, char *file_name) {
+	if(counters->file_count > 1){ 
+		printf("%s:", file_name);
+	}
+	if(struct_flags->n && struct_flags->o) {
+		printf("%d:", counters->count);
+	} 
+	if(struct_flags->o) {
+		for(int i = pmatch[0].rm_so; i < pmatch[0].rm_eo; i++) {
+			printf("%c", begin_str[i]);
+		}
+		printf("\n");
+	}
 }
 
 
