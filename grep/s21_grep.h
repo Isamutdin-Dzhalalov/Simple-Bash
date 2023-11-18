@@ -9,13 +9,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct{
-	int match;
-	int line;
-	int count;
-	int file_count;
+typedef struct {
+  int match;
+  int line;
+  int count;
+  int file_count;
 
-	char str[size];
+  char filename;
+  char str[size];
 } Counters;
 
 typedef struct flags {
@@ -31,6 +32,4 @@ typedef struct flags {
   int o;
 } opt;
 
-void flag_priority(opt struct_flags);
-
-#endif  // SRC_GREP_S21_GREP_H_
+#endif // SRC_GREP_S21_GREP_H_
